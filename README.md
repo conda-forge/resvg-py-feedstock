@@ -243,5 +243,7 @@ In order to produce a uniquely identifiable distribution:
 Feedstock Maintainers
 =====================
 
+* [@baseplate-admin](https://github.com/baseplate-admin/)
 * [@ewels](https://github.com/ewels/)
+* [@serjflint](https://github.com/serjflint/)
 
