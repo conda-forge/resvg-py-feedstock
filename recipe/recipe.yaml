@@ -12,7 +12,13 @@ source:
   sha256: 6d3bf8e866b4e129524d9432a809138b2d100931d8d635bc81294002abcdfd46
 
 build:
-  number: 1
+  number: 2
+  # The extension targets the stable ABI, so one build covers every GIL-enabled
+  # CPython. If a free-threading migration ever reaches this feedstock, is_abi3
+  # is false there and it falls back to a per-version abi3t build.
+  skip: is_abi3 and not is_python_min
+  python:
+    version_independent: ${{ is_abi3 }}
   script:
     - ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
     - cargo-bundle-licenses --format yaml --output THIRDPARTY.yml
@@ -30,6 +36,8 @@ requirements:
     - ${{ stdlib('c') }}
     - cargo-bundle-licenses
   host:
+    - if: is_abi3
+      then: python-abi3
     - python
     - pip
     - maturin >=1,<2
@@ -41,11 +49,24 @@ tests:
       imports:
         - resvg_py
       pip_check: true
+      python_version:
+        - if: is_abi3
+          then: ${{ python_min }}.*
+        - "*"
   - script:
       - python test_render.py
     files:
       recipe:
         - test_render.py
+  - if: is_abi3
+    then:
+      requirements:
+        run:
+          - abi3audit
+      script:
+        - if: unix
+          then: abi3audit $SP_DIR/resvg_py/resvg_py.abi3.so -s -v --assume-minimum-abi3 ${{ python_min }}
+          else: abi3audit %SP_DIR%\resvg_py\resvg_py.pyd -s -v --assume-minimum-abi3 ${{ python_min }}
 
 about:
   homepage: https://github.com/baseplate-admin/resvg-py
